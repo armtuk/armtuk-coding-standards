@@ -1,0 +1,283 @@
+# Java Syntax
+
+## Summary
+
+In order not to waste time, the solutions are presented first and the legacy methods if presented, are done so second to supply contrast.
+
+## String Validation
+
+A single simple method is used for checking null or emptiness of a string. If Java 8 is being used, it is available through apache commons, if Java 11 is being used, it is part of the standard java library. Please note that this **does not** function the same way as Guava's Strings.isNullOrEmpty(), which does not trim whitespace, whereas isBlank() does.
+
+```java
+import org.apache.commons.lang3.StringUtils;
+
+public String myFunction(String input) {
+ if (StringUtils.isBlank(input)) {
+ throw IllegalArgumentException("Input string must not be null or blank");
+ } 
+...
+}
+```
+
+## Usage of final
+
+In most languages, there is some notion of a constant type of thing. Something that once assigned cannot be re-assigned. The underlying intention with a constant, whether a primitive or an object is that it remains fixed, and, it can be counted on being fixed and unchanging. The final keyword in Java, only assures that re-assignment will not occur, it doesn't enforce immutability. In code-formatting guidance, information density is being optimized for, and things that add fluff, i.e. something that doesn't add much value should be eliminated. Given that methods should be short and easy to follow, it can be observed that the final keyword adds no value here, and in some cases communicates incorrectly. Code like this is seen:
+
+```java
+public HashSet doSomething(final List<String> stuff) {
+ final HashSet<String> set = new HashSet<>();
+ stuff.addAll(set);
+ return stuff;
+}
+```
+
+which assigns an empty set to a final variable, and promptly changes the contents. This is strongly considered an anti-pattern. In light of this; it is preferred to use final **only** in member variables where it communicates that a member cannot be modified through a setter, and is useful.
+
+## Try With Resources
+
+With the introduction of try-with-resources, Closeable resources implement the [AutoCloseable](https://docs.oracle.com/javase/8/docs/api/java/lang/AutoCloseable.html) interface, which allows a level of syntatic sugar to be introduced in Java 8:
+
+```java
+try (Scanner scanner = new Scanner(new File("testRead.txt"));
+    PrintWriter writer = new PrintWriter(new File("testWrite.txt"))) {
+   while (scanner.hasNext()) {
+      writer.print(scanner.nextLine());
+   }
+}
+```
+
+Versus the more legacy usage like this:
+
+```java
+Scanner scanner = null;
+PrintWriter writer = null;
+try {
+   File testRead = new File("testRead.txt");
+   scanner = new Scanner(testRead);
+   File testWrite = new File("testWrite.txt");
+   writer = new PrintWriter(testWrite);
+   while (scanner.hasNext()) {
+      String line = scanner.nextLine();
+      writer.print(line);
+   }
+} catch (FileNotFoundException e) {
+   e.printStackTrace();
+} finally {
+   if (scanner != null) {
+      scanner.close();
+   }
+   if (writer != null) {
+      writer.close();
+   }
+}
+```
+
+## Collections Basics including Optional
+
+## Initialization
+
+When initializing collections in Java 8, it can be done quickly and efficiently minimizing assignment, vertical space and error.
+
+### Lists
+
+```java
+return Arrays.asList("One", "Two", "Three");
+```
+
+(Note that Java does **not** return an immutable collection in this case, which is different than most of the other initializers below).
+
+rather than
+
+```java
+ArrayList<String> list = new ArrayList<String>();
+list.add("One");
+list.add("Two");
+list.add("Three");
+return list;
+```
+
+## Streams
+
+```java
+return Streams.of("One", "Two", "Three");
+```
+
+## Singleton Map
+
+```java
+return Collections.singletonMap("Key", "Value");
+```
+
+(Note, Java returns an immutable collection for this case).
+
+versus
+
+```java
+HashMap<String, String> map = new HashMap<String, String>();
+map.put("Key", "Value");
+return map;
+```
+
+## Singleton Set
+
+```java
+return Collections.singleton("Value");
+```
+
+(Note, Java returns an immutable collection for this case).
+
+versus
+
+```java
+HashSet set = new HashSet();
+set.put("Value");
+return set;
+```
+
+## Optional
+
+Optional in Java 8 is recommended primarily to represent a return value that may or may not be present, and the lack of presence is not an error, but rather an expected outcome. An example of this could be looking up a record in a datastore by ID. The record may or may not exist, so an Optional type would be useful to express this meaning. In other languages, there are types that are used to represent not just this cross-cutting meaning of a datum, but also others like Try which represents an successful outcome, or an exception, and Future (CompleteableFuture in Java), to represent an result that may or may not yet have been determined. If the idea of a 'Try' is liked, there is an implementation in [Paymentrisk-java-functional](https://code.amazon.com/packages/Paymentrisk-java-functional).
+
+In other functional languages, Optional is also seen being expressed as a Monad, which has a number of properties; one in particular is that it can be treated as a collection of zero or one elements. In java, Optional has some of the methods to support this but not all (and until Java 11, there are missing methods even in the space of Present versus Non-Present).
+
+## Initialization
+
+In java, there are also two fundamental ways to create an Optional; one with a null check, and one without:
+
+```java
+Optional.of("non-null value");
+Optional.ofNullable("May null value");
+```
+
+When in doubt, Optional.ofNullable() should be used;
+
+This container can then be leveraged to transform the element:
+
+```java
+Optional<String> o = Optional.ofNullable("Value");
+Optional<String> r = o.map(x -> "My value is " + x);
+assertEquals("My value is Value", r);
+```
+
+Which allows the following assignmentless chain to be generated if this were to be created as a function/method:
+
+```java
+return Optional.ofNullable("Value")
+ .map(x -> "May value is " + x);
+```
+
+When an optional is had, the possibility to use the value can be expressed like this:
+
+```java
+Optional<String> o = Optional.ofNullable(myFunction());
+o.ifPresent(x -> System.out.println("My value " + x));
+```
+
+Note that ifPresent is really only useful for side-effecting. There is a more polite way to interact:
+
+```java
+public void main(String[] args) {
+ System.out.println(useMyFunction());
+}
+public String useMyFunction() {
+ return Optional.ofNullable(myFunction())
+   .map(x -> "My value " + x)
+   .orElse("No value present");
+}
+```
+
+Now Onion Architecture is being effectively presenced by allowing the side effect to occur outside of the business logic. Optionals are the **most** useful for this type of programming.
+
+The following situation may also be wondered about:
+
+```java
+public String useMyFunction() {
+ return Optional.ofNullable(myFunction())
+   .map(transform)
+   .orElse("no value present");
+}
+public String transform(String x) throws Exception {
+ if (x == null) { 
+   throw IllegalArgumentException }
+ return "My value" + x;
+}
+```
+
+Sadly Java has **no** polite way to deal with this. A particular way of interacting with checked exceptions is forced, for more information, the [https://w.amazon.com/bin/edit/PaymentRisk/Engineering/ACE/Libraries/Paymentrisk-java-functional](https://w.amazon.com/bin/edit/PaymentRisk/Engineering/ACE/Libraries/Paymentrisk-java-functional) page should be looked at.
+
+## Java 8 Files and Paths API
+
+This will just be wrapped up in an example to read a file and convert all lines to upper case and write to output.
+
+```java
+public void doThing() {
+   Path input = Paths.get("opt", "env","package","logs","application.log");
+   Path output = Paths.get("home","me","path","for","logs","output.log");
+   Files.createDirectories(output.getParent());
+   
+   try (FileWriter writer = new FileWriter(output.toFile())) {
+      Files.lines(input)
+       .map(String::toUpperCase)
+       .forEach(line -> {
+         try { 
+           writer.write(line);
+         } catch (IOException e) { 
+           throw new RuntimeException(e); }
+       });
+   }
+}
+```
+
+- No more File.separator, and BufferedReader over an InputReader over an InputStream. It's amazing it took until Java 8 to get this functionality.
+- lines() to get the File as a Stream<String> of lines
+- Files.createDirectories() to create parent path for an output.
+- Try with resources
+
+## Lombok
+
+## Introduction
+
+Usage of lombok is considered as a stop-gap measure when immutability is not possible for legacy reasons. Lombok is a code-gen annotation library that allows methods to be auto-generated on a Data/Model class (See more discussion of the distinction at [https://w.amazon.com/bin/view/PaymentRisk/Engineering/ACE/BestPractices/DataAndModels](https://w.amazon.com/bin/view/PaymentRisk/Engineering/ACE/BestPractices/DataAndModels)
+
+## Usage
+
+Note that Annotation Processing in IntelliJ will have to be turned on to support this in the IDE.
+
+If a data class is wanted to be created without manually creating a pile of boilerplate, Lombok can be used, and this can be written:
+
+```java
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import java.time.LocalDateTime;
+
+@Data(staticConstructor="of")
+@AllArgsConstructor
+public final class MyDataClass {
+ private final String name;
+ private final String location;
+ private final Double size;
+ private final LocalDateTime lastModified;
+}
+```
+
+This construct will yield a basic data class with:
+
+- A static constructor method called "of" that accepts all arguments that are declared as member variables
+- Setters and Getters for all the members
+- An equals and hashCode method featuring all members
+
+Setters and getters can also be generated on individual members using Lombok if that is appropriate (it generally isn't).
+
+```java
+public class SomeServiceClass {
+ @Getter
+ @Setter
+ private final String someMember;
+}
+```
+
+If mutable state is had on a Service object, then it should be double checked to see if a Model/Data/Aggregate class shouldn't instead be used to represent state rather than internal members on a Service object which should be @Singleton, and should also be stateless as a result.
+
+## References
+
+*This content is part of the "Clean Code for the 21st Century" theme and focuses on functional programming principles that can be applied across multiple languages including TypeScript, JavaScript, and .NET.* 

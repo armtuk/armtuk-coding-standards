@@ -1,0 +1,255 @@
+# Anti-Patterns Things Considered Harmful
+
+This document outlines common anti-patterns in software development that should be avoided.
+
+## Garbage Variables
+
+A garbage variable is where a temporary assignment is used for a value that is immediately used, and then never referenced again
+
+example:
+
+### ❌ Garbage Variable Anti-Pattern (Java)
+```java
+public void method() {  
+  List<String> listOfStrings = someMethod();   
+  List<String> result = anotherMethod(listOfStrings); 
+  return result;
+}
+ 
+public List<String> someMethod() {
+ return Arrays.asList("One", "Two", "Three");
+}
+ 
+public List<String> anotherMethod(List<String> strs) {
+ return strs.stream().map(String::toUpperCase).collect(Collectors.toList);
+}
+```
+
+### ❌ Garbage Variable Anti-Pattern (TypeScript)
+```typescript
+function method(): string[] {
+  const listOfStrings: string[] = someMethod();
+  const result: string[] = anotherMethod(listOfStrings);
+  return result;
+}
+
+function someMethod(): string[] {
+  return ["One", "Two", "Three"];
+}
+
+function anotherMethod(strs: string[]): string[] {
+  return strs.map(str => str.toUpperCase());
+}
+```
+
+### ✅ Better Approach
+
+The substitutive principle should be used and a composed chain of method calls should be called:
+
+#### Java
+```java
+public void method() {
+ return anotherMethod(someMethod());
+}
+```
+
+#### TypeScript
+```typescript
+function method(): string[] {
+  return anotherMethod(someMethod());
+}
+```
+
+## Output Arguments
+
+One of the most harmful anti-patterns, this is where the arguments which are passed to a function are modified implicitly or explicitly within that function. This is perhaps the most insidious anti-pattern! It rapidly causes decomposition to occur in the wrong axis, and instead of small helpful functions, scattered functionality is created. This how spaghetti code comes about.
+Issues:
+* Concurrency can cause unexpected data to become present in a value at unexpected times which causes had to trace bugs.
+* Can cause race conditions.
+* Creates Spaghetti Code.
+
+### ❌ Anti-Pattern (Java)
+```java
+public void method() {
+ List<String> list = new ArrayList<String>();
+ populateList(list);
+}
+
+public void populateList(List<String> list) {
+ list.add("One");
+ list.add("Two");
+ list.add("Three");
+}
+```
+
+### ❌ Anti-Pattern (TypeScript)
+```typescript
+function method(): void {
+  const list: string[] = [];
+  populateList(list);
+}
+
+function populateList(list: string[]): void {
+  list.push("One");
+  list.push("Two");
+  list.push("Three");
+}
+```
+
+The populateList is a function with ONLY side effecting, and it has no return value. This is the least obvious function. A List is populated, but with what? The name doesn't say. What is done with the existing data? The name doesn't say. Is it idempotent? The name doesn't say.
+
+### ✅ Better Approach
+
+#### Java
+```java
+public void method() {
+ List<String> list = new ArrayList<String>();
+ list.addAll(makeValues());
+}
+
+public List<String> makeValues() {
+ return Arrays.asList("One", "Two", "Three");
+}
+```
+
+#### TypeScript
+```typescript
+function method(): string[] {
+  return makeValues();
+}
+
+function makeValues(): string[] {
+  return ["One", "Two", "Three"];
+}
+```
+
+This allows the control to remain in the correct place in the flow, maintain correct abstraction separation. It also allows `makeValues()` to be tested without any external context required. Whilst this is a contrived example, `makeValues` can now be named something useful and descriptive. It's a meaningful verb with a noun. It's also now the decision of the caller what they're going to do with those values. Values can be filtered if needed, or the first can be picked, or anything can be done; but if that populate method binds the values into the List, we'd now have to go back and monkey inside that List introducing more mutability, and more chances for bugs.
+
+**Benefits:**
+* Clear Naming that describes what the function does correctly.
+* Promote immutability which promotes concurrency-safe programming.
+
+## Base Bean Anti-Pattern
+
+The base bean anti-pattern occurs when a child class inherits functionality from a parent class, particularly for functionality that's merely useful, but extends ultimately to virtually any use of `super.something()`. These kinds of functionality should be handled via an injected service class. 
+
+### ❌ Anti-Pattern (Java)
+```java
+public abstract class UsefulStuff {
+ public boolean isBlank(String str) {
+   return (str == null || str.trim().length() == 0)
+ }
+}
+ 
+public class Example extends UsefulStuff {
+ public void someMethod(String value) {
+   if (!isBlank(value)) {
+      doSomething(value);
+   }
+ }
+}
+```
+
+This is a contrived example, but it can be seen where this occurs occasionally. A slightly more full example can also be provided:
+
+```java
+public class AbstractPaymentProcessor {
+ private List<PaymentError> paymentErrors;
+ public CurrencyAmount fetchTransactionAmount(UserPaymentContext context) {   ...  }
+ 
+ abstract public boolean chargePaymentInstrument(PaymentInstrument pi);
+
+ public void setPaymentErrors(List<PaymentError> list) {
+     paymentErrors.addAll(list);
+ }
+
+ public List<PaymentError> getPaymentErrors() {
+    return paymentErrors;
+  }
+}
+
+@AllArgsConstructor
+public class AFooBarPaymentProcessor extends AbstractPaymentProcessor {
+ private final AFooBarProcessor processor;
+ 
+ @Override 
+ public boolean chargePaymentInstrument(UserPaymentContext context, PaymentInstrument pi) {
+   List<String> errors = processor.cargeCreditCard(super.fetchTransactionAmount(context), pi.getCreditCardPAN(), pi.getCVV(), pi.getCardholderName()); 
+   if (errors.isEmpty) {
+      return true;
+     }
+     else {
+      super.setErrors(errors.map(x -> errorOf(pi, x)));
+     return false;
+     }
+   }
+ }
+```
+
+This might be feeling a bit more familiar now; this kind of code can be seen to be not all that uncommon. It's a great deal better to simply receive the PaymentProcessor context functions as a Service object in injection.
+
+### ✅ Better Approach (Java)
+```java
+@Singleton
+@AllArgsConstructor
+public class AFooBarPaymentProcessor extends AbstractPaymentProcessor {
+ private final AFooBarProcess processor;
+ private final PaymentProcessorInfo paymentProcessorInfo;
+ @Override  
+ public List<Errors> chargePaymentInstrument(UserPaymentContext context, PaymentInstrument pi) {
+   List<String> errors = processor.chargeCreditCard(paymentProcessorInfo.fetchTransactionAmount(context), pi.getCreditCardPAN(), pi.getCVV(), pi.getCardholderName());
+   if (errors.isEmpty) {
+      return Collections.emptyList();
+   }
+   else {
+     return errors.map(x -> errorOf(pi, x));
+   }
+ }
+}
+
+@Singleton
+public class PaymentProcessorInfo {
+  public CurrencyAmount fetchTransactionAmount(UserPaymentContext context) {   ...  }
+ }
+```
+
+### ✅ Better Approach (TypeScript)
+```typescript
+interface PaymentProcessorInfo {
+  fetchTransactionAmount(context: UserPaymentContext): CurrencyAmount;
+}
+
+class AFooBarPaymentProcessor {
+  constructor(
+    private readonly processor: AFooBarProcess,
+    private readonly paymentProcessorInfo: PaymentProcessorInfo
+  ) {}
+
+  chargePaymentInstrument(context: UserPaymentContext, pi: PaymentInstrument): Error[] {
+    const errors = this.processor.chargeCreditCard(
+      this.paymentProcessorInfo.fetchTransactionAmount(context),
+      pi.getCreditCardPAN(),
+      pi.getCVV(),
+      pi.getCardholderName()
+    );
+    
+    return errors.isEmpty ? [] : errors.map(x => this.errorOf(pi, x));
+  }
+}
+```
+
+**Benefits:**
+* Testing is easier, 
+* Separation of concerns is clear.
+
+## Key Principles
+
+1. **Avoid side effects** - Functions should return values rather than modifying input parameters
+2. **Prefer composition over inheritance** - Dependency injection and service objects should be used
+3. **Eliminate temporary variables** - Method chaining and functional composition should be used
+4. **Make functions pure** - Same input should always produce same output
+5. **Keep functions small and focused** - Single responsibility principle should be followed
+
+## References
+
+*This content is part of the "Clean Code for the 21st Century" theme and focuses on functional programming principles that can be applied across multiple languages including TypeScript, JavaScript, and .NET.* 

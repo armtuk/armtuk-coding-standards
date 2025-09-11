@@ -1,0 +1,12 @@
+# Logging 
+
+## Logging format
+
+Logs must be well formed JSON. 
+- Each logging output value must include at a "level" key which will be one of ["info", "debug", "warn", "error"] where "info" is the most verbose, "debug" is used for important information, "warn" is used when the state being logged maybe a problem, and "error" for when the execution path has encountered a problem. 
+- Each logging output value must include a "env" value which is set to the deployment environment and will one of ["dev", "qa", "stage", "prod"] based on the deployment environment which is acquired from the environment variable "ENV".
+- Each logging output value must include a "timestamp" value containing the full timestamp including milliseconds of when the logging event was generated.
+- Each logging output value must include a "service" value containing the name of the service.
+- If the context of the logging statement is inside a web request, the log must include a value indicating a request ID. Each and every web request arriving at the system must be assigned this requestID value which is a single value assigned to the request context scope. This requestID must be made availble to all subordinate functions.
+
+Avoid clutter or redundant logs.

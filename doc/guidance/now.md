@@ -1,0 +1,17 @@
+# Development Logging.
+
+A log of all AI actions must be kept in the file NOW.md located in the project root. If the file does not exist, create one. This file is stricly append-only.
+
+Each work session must start with an update to NOW.md. A start entry in this file must include:
+- A timestamp of when the request was issued
+- A copy of the prompt given.
+- A terse summary of what the AI understood it was asked to do.
+
+Each work session must end with an update to NOW.md. Each entry to this file must include:
+- A timestamp of when the task was completed.
+- Task description
+- Actions completed
+- Open questions or blockers
+- Next steps
+- Context summary (keep concise for token management)
+- Where work left off

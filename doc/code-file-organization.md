@@ -1,0 +1,64 @@
+# Code File Organization
+
+## Code Source layout 
+
+Files in the source code folder must be laid out by component i.e. by Organized by Feature.
+
+### Feature Organization
+
+All the source files for a given feature are grouped under their own feature-named folder. 
+This incldues 
+- data models 
+  - interfaces 
+  - types and classes
+- API functions
+- service objects 
+  - repository service objects
+  - business logic service objects
+- UI components. 
+
+Example:
+- src
+  - login
+    - styles
+      - loginForm.scss
+      - loginPage.scss
+    - LoginPage.tsx
+  - tickets
+    - styles
+      - ticketDisplay.scss 
+    - components
+       - TicketDisplayTable.tsx
+       - TicketRow.tsx
+    - lib
+       - TicketApi.tsx
+    - TicketPage.tsx
+  - users
+    - styles
+      - userDisplay.scss
+    - components
+      - UserDisplayTable.tsx
+      - UserRow.tsx
+    - lib
+      - UserApi.tsx
+    - model
+      - User.ts
+      - UserOrder.ts
+    - UserPage.tsx
+  - common
+    - lib
+      - stringUtil.ts
+      - observableUtil.ts
+  - App.tsx
+  - Router.tsx
+  - index.tsx
+
+**[Image: Screenshot showing a mature application's folder structure with feature-based organization. The structure displays multiple feature folders (like "program", "ticket", etc.) with their respective files grouped together. Some feature folders are expanded to show their internal structure, demonstrating how all related files for each feature are co-located.]**
+
+If a developer came along and was asked to work on adding a new field to the Program model, locating all the files to work on is now easy. They *all* live inside the "program" feature folder. The change to the model, the change to the form component, the change to the list component are all co-located and easy to find.
+
+Whilst there is no absolute right answer, and each project gets to do what works best for them, it is personally believed that this particular layout is the more logical, and the most navigable. It has logically related things grouped together in physical location, and makes working on the application more enjoyable than when files have to be hunted for.
+
+## References
+
+*This content is part of the "Clean Code for the 21st Century" theme and focuses on functional programming principles that can be applied across multiple languages including TypeScript, JavaScript, and .NET.* 
