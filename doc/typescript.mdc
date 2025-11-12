@@ -1,0 +1,25 @@
+---
+description: Rules for writing TypeScript code - enforces coding standards
+globs: **/src/**/*.ts,**/src/**/*.js,**/src/**/*.tsx
+alwaysApply: true
+---
+# Rules for Writing TypeScript
+
+- Lines must omit trailing semicolons in TypeScript files unless specificly required by the eslint configuration in the project being worked on.
+- Use `map`, `forEach`, `filter`, and `find` when iterating.
+- declare model types using zod validators for example:
+  ```TypeScript
+  import {z} from zod
+
+  export const myThingValidator = z.object({
+    name: z.string(),
+    email: z.string().email(),
+    createdTimestamp: z.date()
+  }).strict()
+
+  export type MyThing = z.infer<typeof myThingValidator>
+  ```
+- when building return objects for methods, where appropriate, generate interfaces that follow the general pattern:
+  - XYZResult split into XYZSuccessResult and XYZFailureResult disambiguated by a `status` field that contains the values "success" and "failure" respectively. The XYZResult type is implemented as a Union type between XYZSuccessResult and XYZFailureResult. Not that XYZ will be replaced with the appropriate name for the specific implementation.
+  - Methods should have an explicit return type declared when they are method used by other classes.
+  - Internal methods to the class itself can ommit an expicit return type declaration.

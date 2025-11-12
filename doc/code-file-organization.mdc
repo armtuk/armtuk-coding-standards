@@ -1,3 +1,8 @@
+---
+description: This rule enforces logging of AI actions into the NOW.md file.
+globs: **/src/**
+alwaysApply: true
+---
 # Code File Organization
 
 ## Code Source layout 
@@ -52,8 +57,6 @@ Example:
   - App.tsx
   - Router.tsx
   - index.tsx
-
-**[Image: Screenshot showing a mature application's folder structure with feature-based organization. The structure displays multiple feature folders (like "program", "ticket", etc.) with their respective files grouped together. Some feature folders are expanded to show their internal structure, demonstrating how all related files for each feature are co-located.]**
 
 If a developer came along and was asked to work on adding a new field to the Program model, locating all the files to work on is now easy. They *all* live inside the "program" feature folder. The change to the model, the change to the form component, the change to the list component are all co-located and easy to find.
 

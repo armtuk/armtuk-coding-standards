@@ -1,6 +1,11 @@
+---
+description: This rule enforces logging of AI actions into the NOW.md file.
+globs: **
+alwaysApply: true
+---
 # Development Logging.
 
-A log of all AI actions must be kept in the file NOW.md located in the project root. If the file does not exist, create one. This file is stricly append-only.
+A log of all AI actions must be kept in the file NOW.md located in the project root. If the file does not exist, create one. This file is strictly append-only.
 
 Each work session must start with an update to NOW.md. A start entry in this file must include:
 - A timestamp of when the request was issued

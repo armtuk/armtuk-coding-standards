@@ -1,3 +1,8 @@
+---
+description: This rule enforces Java Syntax preferences
+globs: **/src/**.java
+alwaysApply: true
+---
 # Java Syntax
 
 ## Summary

@@ -1,12 +1,18 @@
+---
+description: This rule enforces code formatting best practices
+globs: **/src/**.ts,**/src/**.js,**/src/**.java,**/src/**.scala
+alwaysApply: true
+---
 # Formatting
 
 Consider the follwogin when formatting code:
 
-- **Code Story** - does the code portray a clear story of what it's doing if read from top to bottom. Can a semi-technical user look at the code and generate a mental model that correctly model the outline of the functionality?
-- **Extraneous Code Comments** - Code comments should be avoided. Code comments may only be used when they clarify a section of code that is otherwise opaque.
+- **Code Story** - code must portray a clear story of what it's does if read from top to bottom. Imagine a semi-technical user reading the code. They can generate a mental model that correctly models the outline of the functionality from a top-to-bottom read.
+- **Extraneous Code Comments** - Code comments should be avoided. Code comments can be used when they clarify a section of code that is hard to understand. They should not annotate every single method.
 - **Information order** - A code file like a good story should run from start, through plot development, to finish. The most significant parts and highest abstractions of a code file must come at the beginning. Minor details are saved until last. The file therefore follows the prinicple placing the most abstract methods at the top, with simple helper methods at the bottom.
-- **Horizontal Information Density** - A modern code editor has the capability to display 140 or more characters on a line, do not split a single code statement onto multiple lines unless it produces better comprehension. A logging statement is an example of a single code statement should generally be on a single line. It doesn't provide significant additional comprehension to the reader, only to the log output of the program.
+- **Horizontal Information Density** - Do not split a single code statement onto multiple lines unless it produces better comprehension, or is explicitly required by local eslint rules. A logging statement is an example of a single code statement must be on a single line. It doesn't provide significant additional comprehension to the reader to split it out.
 - **Conditionals** - if you have a conditional block that has more than a single line, prefer to decompose it into a helper function.
+- **Length of Functions** - Functions should be short. A function that perform multiple discrete operations should do so by calling each operation on a single line. If those operations require additional surrounding logic, that logic, and the enclosed call should be decomposed into another method that is then called from the parent context.
 - **Exception handling**
   - Exceptions should only be used to convey unexpected failure. Expected failures must be expressed as an encapsulated return value. Failure modes are part of normal program operation, and therefore should use normal flow mechanisms.
     - Java Example using algebraic data types: 
@@ -32,17 +38,18 @@ Consider the follwogin when formatting code:
     ``` 
     - TypeScript example using iterface:
     ```typescript
-    interface MyFunctionReturnValueSuccess<T> {
-        isSuccess: true
+    interface MyFunctionSuccessResult<T> {
+        status: "success"
         value: T
     }
 
-    interface MyFunctionReturnValueFailure<T> {
-        isSuccess: false
+    interface MyFunctionFailureResult<T> {
+        status: "failure"
         value: T
+        errors: string[]
     }
 
-    type MyFunctionReturnValue<T> = MyFunctionReturnValueSuccess<T> | MyFunctionReturnValueFailure<T>
+    type MyFunctionResult<T> = MyFunctionSuccessResult<T> | MyFunctionFailureResult<T>
     ```
   - Where the code for exception handler is the same as another place in the codebase, this exception handle must be decomposed into a helper function.
   - In languages like Java, always prefer to use Runtime Exceptions.
@@ -161,3 +168,4 @@ function createProcessingError(order: Order): ProcessResult {
 4. **Decompose Complex Conditionals** - Extract complex logic into well-named functions.
 5. **Minimize Vertical Waste** - Avoid unnecessary line breaks that don't improve understanding.
 6. **Use Functional Composition** - Leverage method chaining for better density and clarity.
+7. **Functional Decomposition** - Decompose into smaller functions when functionality starts required additional logic to execute beyond a simple method invocation. 

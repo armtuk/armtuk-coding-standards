@@ -1,4 +1,12 @@
+---
+description: This rule enforces best practices for logging
+globs: **/src/**/*.*
+alwaysApply: true
+---
 # Logging 
+- Prefer using a logger class when available from the application context.  
+- If a class is part of a framework such as NestJS, and no logger is available, create a logger for the class at the top of the class file.
+- When application logging is unavailable, use console.log for log messages and console.error for error messages.
 
 ## Logging format
 
@@ -8,5 +16,3 @@ Logs must be well formed JSON.
 - Each logging output value must include a "timestamp" value containing the full timestamp including milliseconds of when the logging event was generated.
 - Each logging output value must include a "service" value containing the name of the service.
 - If the context of the logging statement is inside a web request, the log must include a value indicating a request ID. Each and every web request arriving at the system must be assigned this requestID value which is a single value assigned to the request context scope. This requestID must be made availble to all subordinate functions.
-
-Avoid clutter or redundant logs.

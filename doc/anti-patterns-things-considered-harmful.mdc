@@ -1,3 +1,8 @@
+---
+description: This rule enforces logging of AI actions into the NOW.md file.
+globs: **/src/**.ts,**/src/**.js
+alwaysApply: true
+---
 # Anti-Patterns Things Considered Harmful
 
 This document outlines common anti-patterns in software development that should be avoided.

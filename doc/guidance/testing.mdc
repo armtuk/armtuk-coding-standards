@@ -1,4 +1,9 @@
 
+---
+description: This rule enforces Test alongside development
+globs: **/src/**.spec.ts,**/src/**.test.ts,**/src/**.test.ts
+alwaysApply: true
+---
 # Testing and Test Alongside Development.
 
 ## Test implementation
