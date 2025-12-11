@@ -22,4 +22,47 @@ alwaysApply: true
 - when building return objects for methods, where appropriate, generate interfaces that follow the general pattern:
   - XYZResult split into XYZSuccessResult and XYZFailureResult disambiguated by a `status` field that contains the values "success" and "failure" respectively. The XYZResult type is implemented as a Union type between XYZSuccessResult and XYZFailureResult. Not that XYZ will be replaced with the appropriate name for the specific implementation.
   - Methods should have an explicit return type declared when they are method used by other classes.
-  - Internal methods to the class itself can ommit an expicit return type declaration.
+  - Internal methods to the class itself can omit an explicit return type declaration.
+
+### Async ###
+
+Functions and method that return Promises should be always defined using the 'async' keyword. This is done to prevent 
+accidently returning a non-promise type value from a function expected to return an async value:
+```typescript
+export class MyClass {
+  async anAsyncMethod() {
+    return this.someIOOperation()
+  }
+  
+  async someIOOperation(): Promise<string> {
+    ...
+  }
+}
+```
+
+### Higher order Functions ###
+
+When defining higher order functions, prefer arrow syntax for methods:
+```typescript
+interface Context {
+  requestId: string
+}
+
+interface HOFFailureResult {
+  status: "failure"
+  error: any
+}
+
+interface HOFSuccessResult {
+  status: "success"
+  value: string
+}
+
+type HOFResult = HOFSuccessResult | HOFFailureResult
+
+export class MyClass {
+  aHOF = (context: Context) => (params: ParamsType): HOFResult => {
+    return { status: "success", value: "foo" }
+  }
+}
+```

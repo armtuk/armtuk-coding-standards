@@ -9,7 +9,7 @@ glob: **/src/**/*.ts
 - passing around a reference to the injection context should be avoided.
 - Functionality should not be encoded in data objects, it should be implemented in a service object. These services objects are singeltons and must not contain application state unless it's a cache of static values.
 
-# Code organization in terms of responsiblities
+# Code organization in terms of responsibilities
 
 - NestJS GraphQL and HTTP services:
   - The general flow of execution will proceed from a Resolver or Controller, via Guards and deserializers, through a set of Service objects leveraging transformers to interact with Repository objects that interact with the datastore. Data is returned from a service object, serialized, and the returned from the controller or resolver object.
@@ -28,7 +28,7 @@ glob: **/src/**/*.ts
   - Repository objects are named using the nestJS convention: my-thing.repository.ts
 - Transformer Objects
   - Are responsible for converting data that is read from the datasource in Entity form into business objects suitable for the service layer.
-  - Are reponsible for converting data that is received from the service layer into Entity form to be written into the datasource.
+  - Are responsible for converting data that is received from the service layer into Entity form to be written into the datasource.
   - May also contain a default entity shape so that a repository class can bootsrap an empty Entity with the appropriate initialized fields.
   - Also contain a validation method to screen data received from the datastore can be converted into a business object, and produce appropriate behavior when it cannot including:
     - Logging when an entity is received that cannot be transformed.

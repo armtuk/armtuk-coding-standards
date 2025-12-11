@@ -19,16 +19,19 @@ There are 5 fundamental types of objects:
 - State and Data containing objects are objects which contain information. 
 - Information is specifically data elements that represent knowledge in the real world. 
 - An address is a piece of data.  A Customer's name is a piece of data. 
-- These objects typically come in two forms, and in two variants of those forms. 
-- The two forms are: 
+- These objects come in two forms, and in two variants of those forms which are:
   - Data objects, which contain only data. Interfaces in JavaScript are data objects.
   - Model objects, which contain both data and functionality related to that data. Classes in JavaScript can be model objects.
 - Within those two forms we have two ways of treating these objects
-  - Mutable. The data in this model is subject to change within an instance.
-  - Immutable. The data in this is unchanging once the class has been instantiated. 
-- Immutable data and model objects are preferred except in the case where we are applying the "Enhance" enterprise integration pattern.
+  - Mutable. The data in this model object is subject to change within an instance after it has been instantiated.
+  - Immutable. The data in this model object is unchanging once the class has been instantiated. 
+- Immutable data and model objects are preferred except in the case where we are applying the "Enricher" enterprise integration pattern as documented by Martin Fowler.
 - A function that relates to a model that needs to be asynchronous must be placed inside a service object.
 - Service objects must be created from the injection context except in test cases.
+- Service objects contain:
+  - methods for performing transformations on model instance
+  - internal storage that contains ONLY metadata related to the system.
+- Application state may only be contained within Model Objects which are always transient and scoped at most to a request context.
 
 ### Composite Objects
 
@@ -148,28 +151,30 @@ Algebraic Datatypes represent algorithms and data structures.
 
 An example algebraic data type is a naive implementation of Option:
 ```Typescript
-interface class IOption<T> {
-  T get()
-  U map<U>(f: (x: T => U)
+export interface IOption<T> {
+  get(): T
+  map<U>(f: (x: T) => U): U
   isPresent(): boolean
 }
 
 export class Some<T> implements IOption<T> {
-  public constructor(private T value) {}
-  public T get() {
+  constructor(private value: T) {}
+  get(): T {
     return value;
   }
-  public U map<U>(f: (x: T) => U) {
+  map<U>(f: (x: T) => U): U {
     return new Some(f(value))
   }
+  isPresent = () => false
 }
 
 export class None<T> implements IOption<T> {
-  public constructor() {}
-  public T get() { throw new Error("Empty value")}
-  public U map<U>(f: (x: T) => U) {
+  constructor() {}
+  get(): T { throw new Error("Empty value")}
+  map<U>(f: (x: T) => U): U {
     return new None<U>()
   }
+  isPresent = () => false
 }
 
 export type Option<T> = None<T> | Some<T>
@@ -209,3 +214,64 @@ class None<T> extends Option<T> {
     }
 }
 ```
+
+## Naming Objects and Datastore Relations and Tables
+
+Objects are named for what data aggregate, datum, domain, or third-party interaction they are responsible for. Each fundamental object type is named slightly differently:
+- Service object are named based on domain they are responsible for. An object that is responsible for the User domain will be named UserService.
+A service object responsible for interacting with Twitter will be named TwitterService
+  - In typescript the file would be named user.service.ts
+  - In Java the file would be named UserService.java
+  - in Scala the file would be named UserService.scala
+When a service object has multiple variants, is polymorphic, these variants should inherit from an Interface.
+  - The interface can be named for the basic case, or with an 'I' prefix:
+    - ```typescript
+      export interface SlackService {
+        async post(post: SlackPost): Promise<SlackPostResult>
+      }```
+  - Derived classes are named based on that which makes them distinctive, for example:
+    - ```typescript
+      export class OAuthSlackService implements SlackService {
+        async post(post: SlackPost): Promise<SlackPostResult> {
+          ...
+        }
+      }```
+    - ```typscript
+      export class SAMLSlackService implements SlackService {
+        ...
+      }```
+- Repository objects are named based on the Entity or Entity Aggregate they perform functions for.  A repository interacting with User data 
+would be named UserRepository.
+  - In typescript the file would be named user.repository.ts
+  - In Java the file would be named UserRepository.java
+  - in Scala the file would be named UserRepository.scala
+- Model and Data objects are named based on the name of an Object abstraction like 'User' or 'Person' or 'Address'. If the object is representing a database table in a relational database, it will be named with an Entity suffix such as 'UserEntity' or 'AddressEntity'.
+- Model and Data objects should be named for the singular rather than the plural.
+- Methods within an Object are named as commands.
+  - Commands that perform a function are named as a command generally of the form <verb> <command> leveraging camel case such as:
+    - changePassword
+    - updateKYCInfo
+    - processOrder
+  - Methods that retrieve data are named prefixed with 'fetch' when a remote datastore interaction is required, and 'get' otherwise.
+    - fetchObjectName
+    - getLocalData
+  - In TypeScript it is appropriate to seperate context groups into Higher Order functions:
+    - ```typescript
+      export class MyExample<T> {
+        aComplexFunction = (context: Context) => (maybeArgument: string = "") => async <U>(definiteFunctionalArgument: (x: T) => U): Promise<U> => {
+          return "my-result"
+        }
+      }```
+    - Function arguments should be the last argument group.
+- Database Tables that store this data should also be named for the singular rather than the plural.
+- Database table and column names should follow the ANSI standard which uses underscores to separate words except when a project has a prior convention established.
+- Database Tables that logically link two Relations/Objects together should be named for both with the Parent object first.
+  - A table linking User and Address would be named user_address
+  - A table linking Address and City would name address_city
+  - Table ID columns are named 'id'.
+  - Foreign key columns are named for the destination table with an id suffix such as
+    - The ID of the address relation on address_city would be named address_id, and be a foreign key to the column named 'id' on the address table
+    - The ID of the city relation on address_city would be city_id, and be a foreign key to the column named 'id' on the city table.
+  - ID columns should be either numeric and generated from a database sequence, or string and be genered by a UUID function.
+  - Unique columns that are textual in nature prefer the '_code' suffix.
+  - Indexes are suffixed with '_i' for a regular index, and '_ui' for a unique index

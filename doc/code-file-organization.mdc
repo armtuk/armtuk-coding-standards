@@ -7,22 +7,24 @@ alwaysApply: true
 
 ## Code Source layout 
 
-Files in the source code folder must be laid out by component i.e. by Organized by Feature.
+Files in the source code folder must be laid out by feature.
 
 ### Feature Organization
 
-All the source files for a given feature are grouped under their own feature-named folder. 
-This incldues 
+Feature organization follows the principle that code that is used together as part of a unit of a feature or function is grouped together in the file hierarchy under a feature-named folder.
+
+When considering grouping files, the kind of files will include:
 - data models 
   - interfaces 
   - types and classes
 - API functions
 - service objects 
-  - repository service objects
-  - business logic service objects
-- UI components. 
+  - repository service objects, functions, and components
+  - business logic service objects, functions, and components
+- UI components
+- bare functions
 
-Example:
+Example for a simple React project:
 - src
   - login
     - styles
@@ -58,9 +60,8 @@ Example:
   - Router.tsx
   - index.tsx
 
-If a developer came along and was asked to work on adding a new field to the Program model, locating all the files to work on is now easy. They *all* live inside the "program" feature folder. The change to the model, the change to the form component, the change to the list component are all co-located and easy to find.
-
-Whilst there is no absolute right answer, and each project gets to do what works best for them, it is personally believed that this particular layout is the more logical, and the most navigable. It has logically related things grouped together in physical location, and makes working on the application more enjoyable than when files have to be hunted for.
+When a developer works on adding a new field to the Program model, locating all the files to work on is obvious. 
+They *all* live inside the "program" feature folder. The change to the model, the change to the form component, the change to the list component are all co-located and easy to find.
 
 ## References
 
