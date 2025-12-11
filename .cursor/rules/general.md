@@ -17,7 +17,7 @@ Scope: **/*
   - When you see a paragraph that looks like code, please format it as code in whatever context it's then used inside of.
   - Prefer writing in passive voice. Reorganize sentences to eliminate personal pronouns such as "we" and "I" wherever possible.
 
-- all references to "amazon" must be changed to example.
+- all references to "amazon" or "autopilot" or "plexq" or "tvpage" must be changed to "example".
   - For example all code starting import "com.amazon" must be changed to "com.example"
 
 # Quality Review
